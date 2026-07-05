@@ -16,11 +16,12 @@ Build Phases there into individual tasks and tags who owns each one.
 
 ## Phase 0 — Foundation
 
-- [ ] Supabase project created, RLS enabled — 🔀 Human creates the project in the Supabase dashboard; Claude Code writes the RLS policies + migrations
-- [ ] `tenants`, `tenant_users`, `channels` seed data — 🤖 Claude Code
-- [ ] All schema migrations in `supabase/migrations/` — 🤖 Claude Code
-- [ ] `campaign_performance` view deployed — 🤖 Claude Code writes the SQL; 🧑 Human applies it (`supabase db push` or Supabase MCP)
-- [ ] Webhook endpoint live, tested with cURL — 🤖 Claude Code builds it; 🧑 Human runs the cURL test
+- [x] Supabase project created, RLS enabled — 🔀 Human creates the project in the Supabase dashboard; Claude Code writes the RLS policies + migrations
+  - **Doc drift corrected 2026-07-04, re-confirmed 2026-07-05:** human created `wtltwglxpasvkgjegcas`. RLS policies (`0006_rls_policies.sql`) applied and confirmed live — `list_tables` shows RLS enabled on all 11 tables, `get_advisors(security)` clean.
+- [x] All schema migrations in `supabase/migrations/` — 🤖 Claude Code — written and applied: `app/supabase/migrations/0001`–`0009` applied to `wtltwglxpasvkgjegcas` on 2026-07-04 via the project-scoped Supabase MCP connector. A follow-up `0010_fix_current_tenant_id_search_path.sql` was written and applied to clear a `function_search_path_mutable` security lint raised immediately after. `get_advisors(security)` is now clean.
+- [x] `tenants`, `tenant_users`, `channels` seed data — 🤖 Claude Code writes it; 🧑 Human runs it — `channels` seeded (14 rows, via `0007_seed_channels.sql`, applied). `app/supabase/seed/tenants.sql` run 2026-07-05: GuruSan registered as tenant #1 (`428db548-f445-4d48-9574-6aef78d927d7`, slug `gurusan`, industry `spiritual wellness`). `tenant_users` still empty — no Supabase Auth user linked yet (needs an actual auth.users UUID, created via the OAuth login flow, not seedable ahead of time).
+- [x] `campaign_performance` view deployed — 🤖 Claude Code writes the SQL; 🧑 Human applies it (`supabase db push` or Supabase MCP) — `0008_campaign_performance_view.sql` applied to `wtltwglxpasvkgjegcas` on 2026-07-04.
+- [x] Webhook endpoint live, tested with cURL — 🤖 Claude Code builds it; 🧑 Human runs the cURL test — deployed `process-conversion` edge function (v3) to `wtltwglxpasvkgjegcas`; ran the Next.js route locally and cURL-tested end-to-end 2026-07-05. Fixed a real bug found in testing: the edge function's internal auth check compared the incoming header against `Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")`, but this project has rotated to Supabase's new `sb_secret_...` key format while the route still authenticates with the legacy JWT service_role key - the two never matched. Removed the redundant internal check; the platform's `verify_jwt: true` gate is the real boundary. Confirmed a full `attributions` row lands correctly (promo_code resolution), then deleted the test fixtures.
 - [ ] GuruSan wired as tenant #1 — 🧑 Human (cross-project API key/webhook-secret exchange between the two Supabase projects)
 
 ## Phase 1 — Core Dashboard
@@ -56,7 +57,7 @@ Build Phases there into individual tasks and tags who owns each one.
 
 - [ ] Tenant onboarding flow — 🤖 Claude Code
 - [ ] Per-tenant API key management — 🤖 Claude Code
-- [ ] Billing (Lemon Squeezy) — 🔀 Human creates the Lemon Squeezy account + product config; Claude Code integrates checkout/webhooks
+- [ ] Billing (Creem.io) — 🔀 Human creates the Creem.io account + product config; Claude Code integrates checkout/webhooks (vendor changed 2026-07-05, was Lemon Squeezy)
 - [ ] Tenant admin: user invite, role management — 🤖 Claude Code
 
 ---
@@ -66,7 +67,7 @@ Build Phases there into individual tasks and tags who owns each one.
 Nearly every coding task in this plan — schema, migrations, API routes, UI, edge
 functions, signal detection, integrations — can be handed to Claude Code. The
 only steps that can't be delegated are: creating accounts/apps in third-party
-dashboards (Supabase, Google Cloud, Meta, Resend, Lemon Squeezy), supplying
+dashboards (Supabase, Google Cloud, Meta, Resend, Creem.io), supplying
 secrets/API keys, and business or legal decisions.
 
 ## Suggested handoff order

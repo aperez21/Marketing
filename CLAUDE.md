@@ -22,7 +22,7 @@ tiers for team access, API integrations, and AI optimization suggestions.
 | Framework | Next.js 16 (App Router) | Consistent with GuruSan; SSR for dashboards |
 | Database | Supabase (PostgreSQL) | RLS handles tenant isolation; real-time for live metrics |
 | Auth | Supabase Auth | Google OAuth + email; tenant-scoped sessions |
-| Hosting | Vercel | CI/CD from GitHub; edge functions available |
+| Hosting | Vercel, served at `gurusan.observer/marketing` via Vercel Microfrontends (decided 2026-07-05) | CI/CD from GitHub; edge functions available; this app is the child app (`basePath: '/marketing'`, `@vercel/microfrontends` wired in `next.config.js`); GuruSan's own repo is the default app and owns `microfrontends.json` + the domain |
 | Styling | Tailwind CSS | Utility-first; consistent with GuruSan |
 | AI layer | Anthropic API (Claude) | Optimization suggestions, anomaly commentary |
 | Email | Resend | Campaign digest emails, anomaly alerts |
@@ -346,7 +346,7 @@ Priority order for conflict resolution: promo_code > utm > referral > self_repor
 Tenants push conversion events to:
 
 ```
-POST /api/v1/webhooks/conversion
+POST /marketing/api/v1/webhooks/conversion
 Authorization: Bearer <tenant_api_key>
 
 {
@@ -411,7 +411,7 @@ emails, or raw behavioral data from the tenant's product.
 ### Phase 5 — Multi-Tenant Growth
 - [ ] Tenant onboarding flow
 - [ ] Per-tenant API key management
-- [ ] Billing (Lemon Squeezy — consistent with GuruSan precedent)
+- [ ] Billing (Creem.io — vendor changed 2026-07-05, was Lemon Squeezy)
 - [ ] Tenant admin: user invite, role management
 
 ---
@@ -477,5 +477,7 @@ vendor decision, identify the authoritative source, update all stale documents,
 and report the conflict before continuing.
 
 ### Vendor Decision
-Payment processor: **Lemon Squeezy** (Merchant of Record model, consistent with
-GuruSan). Do not build against Stripe.
+Payment processor: **Creem.io** (updated 2026-07-05; previously Lemon Squeezy).
+Applies to this platform's own tenant billing (Phase 5) and to how GuruSan
+processes payment for its assessments product. Do not build against Stripe or
+Lemon Squeezy.
