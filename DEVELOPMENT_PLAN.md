@@ -26,12 +26,20 @@ Build Phases there into individual tasks and tags who owns each one.
 
 ## Phase 1 — Core Dashboard
 
-- [ ] Auth: Google OAuth → tenant session — 🔀 Human sets up the OAuth consent screen + credentials in Google Cloud Console; Claude Code wires Supabase Auth + session logic
-- [ ] `/campaigns` list page — 🤖 Claude Code
-- [ ] `/campaigns/[id]` detail page — 🤖 Claude Code
-- [ ] `/campaigns/[id]/placements/[pid]` detail page — 🤖 Claude Code
-- [ ] Manual snapshot entry form — 🤖 Claude Code
-- [ ] Manual spend entry form — 🤖 Claude Code
+- [~] Auth: Google OAuth → tenant session — 🔀 Claude Code wired Supabase Auth + session logic, the tenant-claim JWT hook, and all app-side code 2026-07-06. **Not yet functional end-to-end** — three human steps remain, see "Phase 1 human steps" below.
+- [x] `/campaigns` list page — 🤖 Claude Code, 2026-07-06
+- [x] `/campaigns/[id]` detail page — 🤖 Claude Code, 2026-07-06 — spend summary, KPI scorecard vs. `campaign_goals`, placements list
+- [x] `/campaigns/[id]/placements/[pid]` detail page — 🤖 Claude Code, 2026-07-06 — performance history table, attributions list
+- [x] Manual snapshot entry form — 🤖 Claude Code, 2026-07-06 — server action, engagement_rate computed automatically
+- [x] Manual spend entry form — 🤖 Claude Code, 2026-07-06 — server action, campaign- or placement-level
+
+**Phase 1 human steps (blocks real login working):**
+1. Google Cloud Console: create an OAuth 2.0 Client ID (Web application), add the Supabase callback URL as an authorized redirect URI.
+2. Supabase Dashboard → Authentication → Providers: enable Google, paste the Client ID/Secret from step 1.
+3. Supabase Dashboard → Authentication → Hooks (Beta): select `custom_access_token_hook` as the Custom Access Token hook (migration `0011` already created the function — this can't be enabled via SQL/API, only the dashboard).
+
+Until all three are done, `/login` renders and the build is clean, but clicking
+"Continue with Google" won't produce a working tenant session.
 
 ## Phase 2 — Partner & Influencer Management
 

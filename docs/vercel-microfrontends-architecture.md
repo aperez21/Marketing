@@ -1,6 +1,7 @@
 # Vercel Microfrontends Architecture
 
-**Status as of 2026-07-05:** partially wired, not yet live. See "Current status" below.
+**Status as of 2026-07-06: LIVE.** `gurusan.observer/marketing` routes to this
+app's production deployment. See "Current status" below.
 
 ## What this is
 
@@ -42,35 +43,41 @@ it's registered in the shared microfrontends group with a default route.
   `aperez21s-projects`), linked locally via `app/.vercel/project.json`.
 - Production environment variables `SUPABASE_URL` and
   `SUPABASE_SERVICE_ROLE_KEY` are set.
-- **No microfrontends group exists yet.** The first production deploy
-  (`vercel deploy --prod`) failed at build time with:
-  ```
-  Error [MicrofrontendsError]: Unable to automatically infer the location of
-  the `microfrontends.json` file...
-  ```
-  This is expected until the group is created — see Next step below.
+- Microfrontends group `GuruSan` (id `mfe_QUK5gt8RbeZofQkJ5MtZCaU7mUQa`)
+  created 2026-07-05, linking `guru-san` (default app) and
+  `campaign-intelligence-platform` (child, default route `/marketing`).
+- `GuruSan/app/microfrontends.json` added and pushed (commits `3fa2343`,
+  `3cb465b` in the GuruSan repo) — declares the child app's routing
+  (`/marketing/:path*`) and the required `development.fallback` for the
+  default app entry (`https://gurusan.observer`).
+- `GuruSan/app/package.json` now depends on `@vercel/microfrontends`.
+- Production deploy of `campaign-intelligence-platform` succeeded 2026-07-06
+  (`dpl_7uRCTeEgnKuPpfZvT68NzBspoxPM`), aliased to
+  `campaign-intelligence-platform-ten.vercel.app`.
+- **Verified live end-to-end:** `curl https://gurusan.observer/marketing`
+  returns this app's own 404 page (correct — no dashboard pages exist yet,
+  Phase 1 isn't built), with asset paths correctly namespaced under
+  `/vc-ap-accd8c/...` (the microfrontends asset-prefix mechanism).
+  `gurusan.observer/marketing/api/v1/webhooks/conversion` returns a real 401
+  from the actual route handler (missing auth header) — confirming requests
+  are reaching this app's real code through GuruSan's domain, not erroring
+  at the routing layer.
 
-## Next step (not yet executed)
+## Gotchas hit during setup (for next time)
 
-Create the group, linking both projects:
-
-```
-vercel microfrontends create-group \
-  --name="GuruSan" \
-  --default-app=guru-san \
-  --project=guru-san \
-  --project=campaign-intelligence-platform \
-  --project-default-route=campaign-intelligence-platform=/marketing \
-  --yes
-```
-
-This is a shared-infrastructure change — it modifies `guru-san`'s live
-project configuration (a production project already serving
-`gurusan.observer`) — so it should be run deliberately, not as a
-side effect of an unrelated task.
-
-After the group exists, re-run `vercel deploy --prod` from `app/` for this
-project; `withMicrofrontends()` should then resolve the group automatically.
+- The `microfrontends.json` schema requires a `development.fallback` field
+  on the **default app's** entry, not just routing on the child. Omitting it
+  fails schema validation with a somewhat indirect error ("Unable to infer if
+  applications/guru-san is the default app or a child app").
+- After pushing a `microfrontends.json` change to the default app's repo,
+  there's a short propagation delay before the child app's build can resolve
+  the updated group config — the first retry deploy failed with the same
+  stale schema error even after the fix was live; a second retry ~a minute
+  later succeeded.
+- Git Bash on Windows mangles a leading `/` in CLI args (MSYS path
+  conversion turns `/marketing` into a Windows path). Use
+  `MSYS_NO_PATHCONV=1` as an env prefix when passing paths like
+  `--project-default-route=child=/marketing` to `vercel` from Git Bash.
 
 ## Where to view/manage this in the Vercel dashboard
 
